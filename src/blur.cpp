@@ -287,46 +287,12 @@ void BlurEffect::updateBlurRegion(EffectWindow *w)
     std::optional<QRegion> content;
     std::optional<QRegion> frame;
 
-    if (net_wm_blur_region != XCB_ATOM_NONE) {
-        const QByteArray value = w->readProperty(net_wm_blur_region, XCB_ATOM_CARDINAL, 32);
-        QRegion region;
-        if (value.size() > 0 && !(value.size() % (4 * sizeof(uint32_t)))) {
-            const uint32_t *cardinals = reinterpret_cast<const uint32_t *>(value.constData());
-            for (unsigned int i = 0; i < value.size() / sizeof(uint32_t);) {
-                int x = cardinals[i++];
-                int y = cardinals[i++];
-                int w = cardinals[i++];
-                int h = cardinals[i++];
-                region += Xcb::fromXNative(QRect(x, y, w, h)).toRect();
-            }
-        }
-        if (!value.isNull()) {
-            content = region;
-        }
-    }
-
-    SurfaceInterface *surf = w->surface();
-
-    if (surf && surf->blur()) {
-        content = surf->blur()->region();
-    }
-
-    if (auto internal = w->internalWindow()) {
-        const auto property = internal->property("kwin_blur");
-        if (property.isValid()) {
-            content = property.value<QRegion>();
-        }
-    }
+    // Instead of calculating based on other windows or regions, 
+    // force the blur region to always reference the full desktop area (wallpaper)
+    content = effects->desktop()->geometry();  // Reference the full desktop (background)
 
     if (w->decorationHasAlpha() && decorationSupportsBlurBehind(w)) {
         frame = decorationBlurRegion(w);
-    }
-
-    if (shouldForceBlur(w)) {
-        content = w->expandedGeometry().toRect().translated(-w->x(), -w->y());
-        if (m_blurDecorations && w->decoration()) {
-            frame = w->frameGeometry().toRect().translated(-w->x(), -w->y());
-        }
     }
 
     if (content.has_value() || frame.has_value()) {
@@ -340,7 +306,6 @@ void BlurEffect::updateBlurRegion(EffectWindow *w)
         }
     }
 }
-
 void BlurEffect::generateRoundedCornerMasks(int radius, QRegion &left, QRegion &right, bool top) const
 {
     // This method uses OpenGL to draw circles, since the ones drawn by Qt are terrible.
