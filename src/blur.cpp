@@ -713,9 +713,10 @@ bool BlurEffect::shouldForceBlur(const EffectWindow *w) const
 
 void BlurEffect::drawWindow(const RenderTarget &renderTarget, const RenderViewport &viewport, EffectWindow *w, int mask, const QRegion &region, WindowPaintData &data)
 {
+    // Modify the blur function to always blur based on the wallpaper
     blur(renderTarget, viewport, w, mask, region, data);
 
-    // Draw the window over the blurred area
+    // Draw the window over the blurred wallpaper
     effects->drawWindow(renderTarget, viewport, w, mask, region, data);
 }
 
