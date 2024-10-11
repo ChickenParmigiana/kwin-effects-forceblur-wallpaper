@@ -287,10 +287,9 @@ void BlurEffect::updateBlurRegion(EffectWindow *w)
     std::optional<QRegion> content;
     std::optional<QRegion> frame;
 
-    // Instead of calculating based on other windows or regions, 
-    // force the blur region to always reference the full desktop area (wallpaper)
-    content = effects->desktop()->geometry();  // Reference the full desktop (background)
-
+    // Reference the full virtual screen (wallpaper background)
+    content = effects->virtualScreenGeometry();  // Get full screen geometry
+    
     if (w->decorationHasAlpha() && decorationSupportsBlurBehind(w)) {
         frame = decorationBlurRegion(w);
     }
@@ -955,7 +954,7 @@ void BlurEffect::blur(const RenderTarget &renderTarget, const RenderViewport &vi
         }
 
         // The geometry that will be painted on screen, in device pixels.
-        for (const QRectF &rect : effectiveShape) {
+        for (const QRect &rect : effectiveShape) {
             const float x0 = rect.left();
             const float y0 = rect.top();
             const float x1 = rect.right();
